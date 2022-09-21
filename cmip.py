@@ -49,13 +49,20 @@ for dir in dataset_dirs:
     flag = False
     
     for file in os.listdir(rootdir+"/"+dir):
+        if file.find("year") != -1:
+            continue
         if file.find("abrupt") != -1 and not flag:
             flag = True
             time1 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
         if file.find("piControl") != -1 and flag:
             time2 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
-    time1_num = int(time1.split("-")[1])
-    time2_num = int(time2.split("-")[1])
+    if len(time1) == 13 or len(time1) == 11:
+        time1_num = int(time1.split("-")[1][0:-2])
+        time2_num = int(time2.split("-")[1][0:-2])
+    else:
+        time1_num = int(time1.split("-")[1])
+        time2_num = int(time2.split("-")[1])
+
 
     # set correct var names
     exp_file_name_temp2late = rootdir + dir + "/tas_Amon_MODEL_abrupt-4xCO2_TIME.nc" 
