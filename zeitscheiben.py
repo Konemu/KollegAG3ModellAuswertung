@@ -23,11 +23,11 @@ plt.rc('ytick', labelsize=16)
 
 def lin(x, a, b):
     return a*x + b
-    
+
 
 import os
 
-rootdir = "/home/max/cmip6/"
+rootdir = "/home/max/zeitscheiben/"
 dataset_dirs = os.listdir(rootdir)
 
 # result containers:
@@ -39,36 +39,31 @@ arctic_amp_err = []
 antarctic_amp = []
 antarctic_amp_err = []
 
-
-
 for dir in dataset_dirs:
-    # determine model
-    models.append(dir)
-    model = dir
-
-    time1 = ""
-    time2 = ""
+    # determine model, epoch and co2
+    model = dir.split("_")[0]
+    epoch = dir.split("_")[1]
+    co2 = dir.split("_")[-2]
+    if co2[1] == "x":
+        x = int(co2[x])
+    elif co2[-1] == "m":
+        x = float(co2[0:2])/260
     
-    for file in os.listdir(rootdir+"/"+dir):
-        if file.find("year") != -1:
-            continue
-        if file.find("abrupt") != -1:
-            time1 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
-        if file.find("piControl") != -1:
-            time2 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
-    if len(time1) == 13 or len(time1) == 11:
-        time1_num = int(time1.split("-")[1][0:-2])
-        time2_num = int(time2.split("-")[1][0:-2])
-    else:
-        time1_num = int(time1.split("-")[1])
-        time2_num = int(time2.split("-")[1])
+    models.append(model + ", " + epoch + ", " + str(x) + "CO2")
+    epoch_ref ="PreIndustrial"
+    x = dir.split("_")[1].replace("xCO2", "")
 
+    # set correct var names
+    exp_file_name_template = rootdir + dir + "/MODEL_EPOCH_XxCO2_100years.nc" 
+    ref_file_name_template = "/home/max/zeitscheiben/MODEL_PreIndustrial_100years/MODEL_PreIndustrial_100years.nc"
+    exp_file = exp_file_name_template.replace("MODEL",model).replace("EPOCH",epoch).replace("X",x)
+    ref_file = ref_file_name_template.replace("MODEL",model)
 
     # set correct var names
     exp_file_name_taslate = rootdir + dir + "/tas_Amon_MODEL_abrupt-4xCO2_TIME.nc" 
     ref_file_name_taslate = rootdir + dir + "/tas_Amon_MODEL_piControl_TIME.nc"
-    exp_file = exp_file_name_taslate.replace("MODEL",model).replace("TIME",time1)
-    ref_file = ref_file_name_taslate.replace("MODEL",model).replace("TIME",time2)
+    exp_file = exp_file_name_taslate.replace("MODEL",model)
+    ref_file = ref_file_name_taslate.replace("MODEL",model)
     
     # generate data using cdo
 
@@ -93,10 +88,7 @@ for dir in dataset_dirs:
     for realm in exp_file,ref_file:
         #computation of year means of spatially resolved monthly data
         outfile_yearmeans=realm.replace("data/","").replace('.nc','_yearmonmean.nc')
-        if realm == exp_file:
-            retval=cdo.yearmonmean(input = ("-selyear,"+str(time1_num-99)+"/"+str(time1_num) + " %s")%(realm), output = outfile_yearmeans)
-        else:
-            retval=cdo.yearmonmean(input = ("-selyear,"+str(time2_num-99)+"/"+str(time2_num) + " %s")%(realm), output = outfile_yearmeans)
+        retval=cdo.yearmonmean(input = realm, output = outfile_yearmeans)
         #computation of time means of spatially resolved yearly data
         outfile_timmean=outfile_yearmeans.replace("data/","").replace('.nc','_timmean.nc')
         retval=cdo.timmean(input = outfile_yearmeans, output = outfile_timmean)
@@ -295,7 +287,7 @@ ax.set_xlim(0,6)
 ax.legend(loc="lower right")
 fig.tight_layout()
 
-fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out/phasespace.pdf")
+fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/phasespace.pdf")
 
 fig, ax = plt.subplots()
 for pair in zip(arctic_amp, antarctic_amp, models, arctic_amp_err, antarctic_amp_err):
@@ -311,10 +303,10 @@ ax.set_xlim(0,4)
     
 ax.legend(loc="lower left")
 fig.tight_layout()
-fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out/phasespace2.pdf")
+fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/phasespace2.pdf")
 
 import csv
-with open('/home/max/code/KollegAG3ModellAuswertung/out/res.txt', 'w') as f:
+with open('/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/res.txt', 'w') as f:
       
     # using csv.writer method from CSV package
     write = csv.writer(f)
