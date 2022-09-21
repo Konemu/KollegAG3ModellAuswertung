@@ -44,11 +44,24 @@ for dir in dataset_dirs:
     models.append(dir)
     model = dir
 
+    time1 = ""
+    time2 = ""
+    flag = False
+    
+    for file in os.listdir(rootdir+"/"+dir):
+        if file.find("abrupt") != -1 and not flag:
+            flag = True
+            time1 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
+        if file.find("piControl") != -1 and flag:
+            time2 = file.split("_")[-1].replace(".nc","").replace(":Zone.Identifier","")
+    time1_num = int(time1.split("-")[1])
+    time2_num = int(time2.split("-")[1])
+
     # set correct var names
-    exp_file_name_temp2late = rootdir + dir + "/tas_Amon_MODEL_abrupt-4xCO2.nc" 
-    ref_file_name_temp2late = rootdir + dir + "/tas_Amon_MODEL_piControl.nc"
-    exp_file = exp_file_name_temp2late.replace("MODEL",model)
-    ref_file = ref_file_name_temp2late.replace("MODEL",model) 
+    exp_file_name_temp2late = rootdir + dir + "/tas_Amon_MODEL_abrupt-4xCO2_TIME.nc" 
+    ref_file_name_temp2late = rootdir + dir + "/tas_Amon_MODEL_piControl_TIME.nc"
+    exp_file = exp_file_name_temp2late.replace("MODEL",model).replace("TIME",time1)
+    ref_file = ref_file_name_temp2late.replace("MODEL",model).replace("TIME",time2)
 
     # generate data using cdo
 
@@ -73,7 +86,10 @@ for dir in dataset_dirs:
     for realm in exp_file,ref_file:
         #computation of year means of spatially resolved monthly data
         outfile_yearmeans=realm.replace("data/","").replace('.nc','_yearmonmean.nc')
-        retval=cdo.yearmonmean(input = realm, output = outfile_yearmeans)
+        if realm == exp_file:
+            retval=cdo.yearmonmean(input = ("-selyear,"+str(time1_num-99)+"/"+str(time1_num) + " %s")%(realm), output = outfile_yearmeans)
+        else:
+            retval=cdo.yearmonmean(input = ("-selyear,"+str(time2_num-99)+"/"+str(time2_num) + " %s")%(realm), output = outfile_yearmeans)
         #computation of time means of spatially resolved yearly data
         outfile_timmean=outfile_yearmeans.replace("data/","").replace('.nc','_timmean.nc')
         retval=cdo.timmean(input = outfile_yearmeans, output = outfile_timmean)
