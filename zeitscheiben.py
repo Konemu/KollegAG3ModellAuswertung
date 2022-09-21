@@ -40,30 +40,29 @@ antarctic_amp = []
 antarctic_amp_err = []
 
 for dir in dataset_dirs:
+    if dir == "COSMOS-AO_PreIndustrial_100years" or dir == "COSMOS-ASO_PreIndustrial_100years":
+        continue
     # determine model, epoch and co2
     model = dir.split("_")[0]
     epoch = dir.split("_")[1]
+
+    fnpts = dir.split("_")[0:-2]
+
     co2 = dir.split("_")[-2]
     if co2[1] == "x":
-        x = int(co2[x])
+        x = int(co2[0])
     elif co2[-1] == "m":
-        x = float(co2[0:2])/260
+        x = float(co2[0:3])/280
     
-    models.append(model + ", " + epoch + ", " + str(x) + "CO2")
+    models.append(model + ", " + epoch + ", " + str(np.round(x,1)) + "xCO2")
     epoch_ref ="PreIndustrial"
-    x = dir.split("_")[1].replace("xCO2", "")
 
     # set correct var names
     exp_file_name_template = rootdir + dir + "/MODEL_EPOCH_XxCO2_100years.nc" 
     ref_file_name_template = "/home/max/zeitscheiben/MODEL_PreIndustrial_100years/MODEL_PreIndustrial_100years.nc"
-    exp_file = exp_file_name_template.replace("MODEL",model).replace("EPOCH",epoch).replace("X",x)
+    #exp_file = exp_file_name_template.replace("MODEL",model).replace("EPOCH",epoch).replace("X",x)
+    exp_file = rootdir + dir + "/" + dir + ".nc"
     ref_file = ref_file_name_template.replace("MODEL",model)
-
-    # set correct var names
-    exp_file_name_taslate = rootdir + dir + "/tas_Amon_MODEL_abrupt-4xCO2_TIME.nc" 
-    ref_file_name_taslate = rootdir + dir + "/tas_Amon_MODEL_piControl_TIME.nc"
-    exp_file = exp_file_name_taslate.replace("MODEL",model)
-    ref_file = ref_file_name_taslate.replace("MODEL",model)
     
     # generate data using cdo
 
@@ -88,28 +87,28 @@ for dir in dataset_dirs:
     for realm in exp_file,ref_file:
         #computation of year means of spatially resolved monthly data
         outfile_yearmeans=realm.replace("data/","").replace('.nc','_yearmonmean.nc')
-        retval=cdo.yearmonmean(input = realm, output = outfile_yearmeans)
+        #retval=cdo.yearmonmean(input = realm, output = outfile_yearmeans)
         #computation of time means of spatially resolved yearly data
         outfile_timmean=outfile_yearmeans.replace("data/","").replace('.nc','_timmean.nc')
-        retval=cdo.timmean(input = outfile_yearmeans, output = outfile_timmean)
+        #retval=cdo.timmean(input = outfile_yearmeans, output = outfile_timmean)
         #computation of global mean of year average spatially resolved data
         outfile_yearmeans_fldmean=outfile_yearmeans.replace('.nc','_fldmean.nc')
-        retval=cdo.fldmean(input = outfile_yearmeans, output = outfile_yearmeans_fldmean)
+        #retval=cdo.fldmean(input = outfile_yearmeans, output = outfile_yearmeans_fldmean)
         #computation of global mean of time average spatially resolved data
         outfile_timmean_fldmean=outfile_timmean.replace('.nc','_fldmean.nc')
-        retval=cdo.fldmean(input = outfile_timmean, output = outfile_timmean_fldmean)
+        #retval=cdo.fldmean(input = outfile_timmean, output = outfile_timmean_fldmean)
         #computation of Arctic mean of year average spatially resolved data
         outfile_yearmeans_arctic_mean=outfile_yearmeans.replace('.nc','_arctic_mean.nc')
-        retval=cdo.fldmean(input = "-sellonlatbox,0,360,60,90 %s"%(outfile_yearmeans), output = outfile_yearmeans_arctic_mean)
+        #retval=cdo.fldmean(input = "-sellonlatbox,0,360,60,90 %s"%(outfile_yearmeans), output = outfile_yearmeans_arctic_mean)
         #computation of Arctic mean of time average spatially resolved data
         outfile_timmean_arctic_mean=outfile_timmean.replace('.nc','_arctic_mean.nc')
-        retval=cdo.fldmean(input = "-sellonlatbox,0,360,60,90 %s"%(outfile_timmean), output = outfile_timmean_arctic_mean)
+        #retval=cdo.fldmean(input = "-sellonlatbox,0,360,60,90 %s"%(outfile_timmean), output = outfile_timmean_arctic_mean)
         #computation of low latitude mean of year average spatially resolved data
         outfile_yearmeans_lowlat_mean=outfile_yearmeans.replace('.nc','_lowlat_mean.nc')
-        retval=cdo.fldmean(input = "-sellonlatbox,0,360,0,30 %s"%(outfile_yearmeans), output = outfile_yearmeans_lowlat_mean)
+        #retval=cdo.fldmean(input = "-sellonlatbox,0,360,0,30 %s"%(outfile_yearmeans), output = outfile_yearmeans_lowlat_mean)
         #computation of low latitude mean of time average spatially resolved data
         outfile_timmean_lowlat_mean=outfile_timmean.replace('.nc','_lowlat_mean.nc')
-        retval=cdo.fldmean(input = "-sellonlatbox,0,360,0,30 %s"%(outfile_timmean), output = outfile_timmean_lowlat_mean)
+        #retval=cdo.fldmean(input = "-sellonlatbox,0,360,0,30 %s"%(outfile_timmean), output = outfile_timmean_lowlat_mean)
         
         #computation of ANTarctic mean of year average spatially resolved data
         outfile_yearmeans_antarctic_mean=outfile_yearmeans.replace('.nc','_antarctic_mean.nc')
@@ -145,8 +144,8 @@ for dir in dataset_dirs:
     #load time average spatially resolved data
     exp_file_hdl=Dataset(exp_files["timmean"]) #open NetCDF file named in entry *timmean* of dictionary *exp_files*
     ref_file_hdl=Dataset(ref_files["timmean"])
-    exp_tas_timmean=exp_file_hdl.variables['tas'][:].squeeze() #read specific variable from the opened NetCDF file
-    ref_tas_timmean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_timmean=exp_file_hdl.variables['temp2'][:].squeeze() #read specific variable from the opened NetCDF file
+    ref_tas_timmean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close() #close the NetCDF file
     ref_file_hdl.close()
@@ -154,8 +153,8 @@ for dir in dataset_dirs:
     #load yearmean global average time series
     exp_file_hdl=Dataset(exp_files["yearmeans_fldmean"])
     ref_file_hdl=Dataset(ref_files["yearmeans_fldmean"])
-    exp_tas_yearmeans_fldmean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_yearmeans_fldmean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_yearmeans_fldmean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_yearmeans_fldmean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -163,8 +162,8 @@ for dir in dataset_dirs:
     #load time average global average
     exp_file_hdl=Dataset(exp_files["timmean_fldmean"])
     ref_file_hdl=Dataset(ref_files["timmean_fldmean"])
-    exp_tas_timmean_fldmean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_timmean_fldmean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_timmean_fldmean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_timmean_fldmean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -172,8 +171,8 @@ for dir in dataset_dirs:
     #load yearmean low latitude average
     exp_file_hdl=Dataset(exp_files["yearmeans_lowlat_mean"])
     ref_file_hdl=Dataset(ref_files["yearmeans_lowlat_mean"])
-    exp_tas_yearmeans_lowlat_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_yearmeans_lowlat_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_yearmeans_lowlat_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_yearmeans_lowlat_mean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -181,8 +180,8 @@ for dir in dataset_dirs:
     #load time average low latitude average
     exp_file_hdl=Dataset(exp_files["timmean_lowlat_mean"])
     ref_file_hdl=Dataset(ref_files["timmean_lowlat_mean"])
-    exp_tas_timmean_lowlat_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_timmean_lowlat_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_timmean_lowlat_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_timmean_lowlat_mean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -190,8 +189,8 @@ for dir in dataset_dirs:
     #load yearmean arctic average
     exp_file_hdl=Dataset(exp_files["yearmeans_arctic_mean"])
     ref_file_hdl=Dataset(ref_files["yearmeans_arctic_mean"])
-    exp_tas_yearmeans_arctic_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_yearmeans_arctic_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_yearmeans_arctic_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_yearmeans_arctic_mean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -199,8 +198,8 @@ for dir in dataset_dirs:
     #load time average arctic average
     exp_file_hdl=Dataset(exp_files["timmean_arctic_mean"])
     ref_file_hdl=Dataset(ref_files["timmean_arctic_mean"])
-    exp_tas_timmean_arctic_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_timmean_arctic_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_timmean_arctic_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_timmean_arctic_mean=ref_file_hdl.variables['temp2'][:].squeeze()
 
     exp_file_hdl.close()
     ref_file_hdl.close()
@@ -208,16 +207,16 @@ for dir in dataset_dirs:
     #load yearmean antarctic average
     exp_file_hdl=Dataset(exp_files["yearmeans_antarctic_mean"])
     ref_file_hdl=Dataset(ref_files["yearmeans_antarctic_mean"])
-    exp_tas_yearmeans_antarctic_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_yearmeans_antarctic_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_yearmeans_antarctic_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_yearmeans_antarctic_mean=ref_file_hdl.variables['temp2'][:].squeeze()
     exp_file_hdl.close()
     ref_file_hdl.close()
 
     #load time average antarctic average
     exp_file_hdl=Dataset(exp_files["timmean_antarctic_mean"])
     ref_file_hdl=Dataset(ref_files["timmean_antarctic_mean"])
-    exp_tas_timmean_antarctic_mean=exp_file_hdl.variables['tas'][:].squeeze()
-    ref_tas_timmean_antarctic_mean=ref_file_hdl.variables['tas'][:].squeeze()
+    exp_tas_timmean_antarctic_mean=exp_file_hdl.variables['temp2'][:].squeeze()
+    ref_tas_timmean_antarctic_mean=ref_file_hdl.variables['temp2'][:].squeeze()
     exp_file_hdl.close()
     ref_file_hdl.close()
 
@@ -235,18 +234,18 @@ for dir in dataset_dirs:
     ref_file_hdl.close()
 
     # calculate climate sensitivity metrics
-    exp_tas_yearmeans_fldmean_dev = np.std(exp_tas_yearmeans_fldmean)#/np.sqrt(100)
-    ref_tas_yearmeans_fldmean_dev = np.std(ref_tas_yearmeans_fldmean)#/np.sqrt(100)
-    cs = (exp_tas_timmean_fldmean-ref_tas_timmean_fldmean)/2
+    exp_tas_yearmeans_fldmean_dev = np.std(exp_tas_yearmeans_fldmean)/np.sqrt(100)
+    ref_tas_yearmeans_fldmean_dev = np.std(ref_tas_yearmeans_fldmean)/np.sqrt(100)
+    cs = (exp_tas_timmean_fldmean-ref_tas_timmean_fldmean)*2/x
     delta_cs = np.sqrt(exp_tas_yearmeans_fldmean_dev**2 + ref_tas_yearmeans_fldmean_dev**2)
     
     climate_sens.append(cs)
     climate_sens_err.append(delta_cs)
 
-    exp_tas_yearmeans_arctic_mean_dev = np.std(exp_tas_yearmeans_arctic_mean)#/np.sqrt(100)
-    ref_tas_yearmeans_arctic_mean_dev = np.std(ref_tas_yearmeans_arctic_mean)#/np.sqrt(100)
-    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
-    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
+    exp_tas_yearmeans_arctic_mean_dev = np.std(exp_tas_yearmeans_arctic_mean)/np.sqrt(100)
+    ref_tas_yearmeans_arctic_mean_dev = np.std(ref_tas_yearmeans_arctic_mean)/np.sqrt(100)
+    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)/np.sqrt(100)
+    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)/np.sqrt(100)
     aa = (exp_tas_timmean_arctic_mean-ref_tas_timmean_arctic_mean)/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean)
     delta_aa = np.sqrt((exp_tas_yearmeans_arctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
                     +(ref_tas_yearmeans_arctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
@@ -256,10 +255,10 @@ for dir in dataset_dirs:
     arctic_amp.append(aa)
     arctic_amp_err.append(delta_aa)
 
-    exp_tas_yearmeans_antarctic_mean_dev = np.std(exp_tas_yearmeans_antarctic_mean)#/np.sqrt(100)
-    ref_tas_yearmeans_antarctic_mean_dev = np.std(ref_tas_yearmeans_antarctic_mean)#/np.sqrt(100)
-    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
-    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
+    exp_tas_yearmeans_antarctic_mean_dev = np.std(exp_tas_yearmeans_antarctic_mean)/np.sqrt(100)
+    ref_tas_yearmeans_antarctic_mean_dev = np.std(ref_tas_yearmeans_antarctic_mean)/np.sqrt(100)
+    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)/np.sqrt(100)
+    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)/np.sqrt(100)
     aaa = (exp_tas_timmean_antarctic_mean-ref_tas_timmean_antarctic_mean)/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean)
     delta_aaa = np.sqrt((exp_tas_yearmeans_antarctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
                     +(ref_tas_yearmeans_antarctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
@@ -281,10 +280,12 @@ ax.plot(x,y, "--", color="gray", label = "Lin. fit")
 
 ax.set_xlabel("Climate sensitivity (K)")
 ax.set_ylabel("Arctic amplification")
-ax.set_ylim(0,3.5)
-ax.set_xlim(0,6)
+ax.set_ylim(0,5)
+#ax.set_xlim(0,10)
+
+fig.set_figsize=(16,8)
     
-ax.legend(loc="lower right")
+ax.legend(bbox_to_anchor=(1.0, 1.0), loc="upper left", fontsize=8)
 fig.tight_layout()
 
 fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/phasespace.pdf")
@@ -298,10 +299,12 @@ ax.plot(x,x, "--", color="gray")
 
 ax.set_xlabel("Arctic amplification")
 ax.set_ylabel("Antarctic amplification")
-ax.set_ylim(0,2)
+ax.set_ylim(0,4)
 ax.set_xlim(0,4)
+
+fig.set_figsize=(16,8)
     
-ax.legend(loc="lower left")
+ax.legend(bbox_to_anchor=(1.0, 1.0), loc="upper left", fontsize=8)
 fig.tight_layout()
 fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/phasespace2.pdf")
 
