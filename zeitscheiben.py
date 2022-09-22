@@ -15,6 +15,7 @@ cdo=Cdo() #towards easier calling of Cdo()
 # nicer plots
 plt.rcParams['text.usetex'] = False
 plt.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
+plt.rcParams['figure.figsize'] = (12, 6)
 plt.rc('font', family='serif')
 plt.rc('axes', labelsize=16)
 plt.rc('xtick', labelsize=16)
@@ -234,18 +235,18 @@ for dir in dataset_dirs:
     ref_file_hdl.close()
 
     # calculate climate sensitivity metrics
-    exp_tas_yearmeans_fldmean_dev = np.std(exp_tas_yearmeans_fldmean)/np.sqrt(100)
-    ref_tas_yearmeans_fldmean_dev = np.std(ref_tas_yearmeans_fldmean)/np.sqrt(100)
+    exp_tas_yearmeans_fldmean_dev = np.std(exp_tas_yearmeans_fldmean)#/np.sqrt(100)
+    ref_tas_yearmeans_fldmean_dev = np.std(ref_tas_yearmeans_fldmean)#/np.sqrt(100)
     cs = (exp_tas_timmean_fldmean-ref_tas_timmean_fldmean)*2/x
-    delta_cs = np.sqrt(exp_tas_yearmeans_fldmean_dev**2 + ref_tas_yearmeans_fldmean_dev**2)
+    delta_cs = np.sqrt(exp_tas_yearmeans_fldmean_dev**2 + ref_tas_yearmeans_fldmean_dev**2)/np.sqrt(2/x)
     
     climate_sens.append(cs)
     climate_sens_err.append(delta_cs)
 
-    exp_tas_yearmeans_arctic_mean_dev = np.std(exp_tas_yearmeans_arctic_mean)/np.sqrt(100)
-    ref_tas_yearmeans_arctic_mean_dev = np.std(ref_tas_yearmeans_arctic_mean)/np.sqrt(100)
-    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)/np.sqrt(100)
-    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)/np.sqrt(100)
+    exp_tas_yearmeans_arctic_mean_dev = np.std(exp_tas_yearmeans_arctic_mean)#/np.sqrt(100)
+    ref_tas_yearmeans_arctic_mean_dev = np.std(ref_tas_yearmeans_arctic_mean)#/np.sqrt(100)
+    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
+    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
     aa = (exp_tas_timmean_arctic_mean-ref_tas_timmean_arctic_mean)/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean)
     delta_aa = np.sqrt((exp_tas_yearmeans_arctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
                     +(ref_tas_yearmeans_arctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
@@ -255,10 +256,10 @@ for dir in dataset_dirs:
     arctic_amp.append(aa)
     arctic_amp_err.append(delta_aa)
 
-    exp_tas_yearmeans_antarctic_mean_dev = np.std(exp_tas_yearmeans_antarctic_mean)/np.sqrt(100)
-    ref_tas_yearmeans_antarctic_mean_dev = np.std(ref_tas_yearmeans_antarctic_mean)/np.sqrt(100)
-    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)/np.sqrt(100)
-    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)/np.sqrt(100)
+    exp_tas_yearmeans_antarctic_mean_dev = np.std(exp_tas_yearmeans_antarctic_mean)#/np.sqrt(100)
+    ref_tas_yearmeans_antarctic_mean_dev = np.std(ref_tas_yearmeans_antarctic_mean)#/np.sqrt(100)
+    exp_tas_yearmeans_lowlat_mean_dev = np.std(exp_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
+    ref_tas_yearmeans_lowlat_mean_dev = np.std(ref_tas_yearmeans_lowlat_mean)#/np.sqrt(100)
     aaa = (exp_tas_timmean_antarctic_mean-ref_tas_timmean_antarctic_mean)/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean)
     delta_aaa = np.sqrt((exp_tas_yearmeans_antarctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
                     +(ref_tas_yearmeans_antarctic_mean_dev/(exp_tas_timmean_lowlat_mean-ref_tas_timmean_lowlat_mean))**2
@@ -268,11 +269,46 @@ for dir in dataset_dirs:
     antarctic_amp.append(aaa)
     antarctic_amp_err.append(delta_aaa)
 
+cst = []
+aat = []
 fig, ax = plt.subplots()
 for pair in zip(climate_sens, arctic_amp, models, climate_sens_err, arctic_amp_err):
-    ax.errorbar(pair[0], pair[1], xerr=pair[3], yerr=pair[4], label=pair[2], fmt="v", markersize=8, capsize=5, ecolor="black")
+    if pair[2].split(",")[2].replace(" ","") == "1xCO2":
+        continue
+        fmt = "v"
+    elif pair[2].split(",")[2].replace(" ","") == "1.2xCO2":
+        fmt = "^"
+    elif pair[2].split(",")[2].replace(" ","") == "1.4xCO2":
+        fmt = "<"
+    elif pair[2].split(",")[2].replace(" ","") == "1.6xCO2":
+        fmt = ">"
+    elif pair[2].split(",")[2].replace(" ","") == "2xCO2":
+        fmt = "p"
+    elif pair[2].split(",")[2].replace(" ","") == "2.1xCO2":
+        fmt = "s"
+    elif pair[2].split(",")[2].replace(" ","") == "3xCO2" or pair[2].split(",")[2].replace(" ","") == "3.0xCO2":
+        fmt = "*"
+    elif pair[2].split(",")[2].replace(" ","") == "4xCO2":
+        fmt = "x"
 
-parameters, cov = opt.curve_fit(lin, climate_sens, arctic_amp)
+    if pair[2].split(",")[1].replace(" ","") == "Maastrichtian":
+        color = "blue"
+    elif pair[2].split(",")[1].replace(" ","") == "Miocene":
+        color = "green"
+    elif pair[2].split(",")[1].replace(" ","") == "Pliocene":
+        color = "orange"
+    elif pair[2].split(",")[1].replace(" ","") == "Eocene":
+        color = "red"
+    elif pair[2].split(",")[1].replace(" ","") == "PreIndustrial":
+        color = "cyan"
+    elif pair[2].split(",")[1].replace(" ","") == "Oligocene":
+        color = "gray"
+    cst.append(pair[0])
+    aat.append(pair[1])
+    ax.errorbar(pair[0], pair[1], xerr=pair[3], yerr=pair[4], label=pair[2], fmt=fmt, markersize=8, capsize=5, ecolor="black", color=color)
+
+
+parameters, cov = opt.curve_fit(lin, cst, aat)
 x = np.linspace(0,10,100)
 y = lin(x, parameters[0], parameters[1])
 print(parameters[0], parameters[1])
@@ -280,10 +316,8 @@ ax.plot(x,y, "--", color="gray", label = "Lin. fit")
 
 ax.set_xlabel("Climate sensitivity (K)")
 ax.set_ylabel("Arctic amplification")
-ax.set_ylim(0,5)
-#ax.set_xlim(0,10)
-
-fig.set_figsize=(16,8)
+ax.set_ylim(0,3.5)
+ax.set_xlim(0,10)
     
 ax.legend(bbox_to_anchor=(1.0, 1.0), loc="upper left", fontsize=8)
 fig.tight_layout()
@@ -292,17 +326,45 @@ fig.savefig("/home/max/code/KollegAG3ModellAuswertung/out_zeitscheiben/phasespac
 
 fig, ax = plt.subplots()
 for pair in zip(arctic_amp, antarctic_amp, models, arctic_amp_err, antarctic_amp_err):
-    ax.errorbar(pair[0], pair[1], xerr=pair[3], yerr=pair[4], label=pair[2], fmt="v", markersize=8, capsize=5, ecolor="black")
+    if pair[2].split(",")[2].replace(" ","") == "1xCO2":
+        continue
+        fmt = "v"
+    elif pair[2].split(",")[2].replace(" ","") == "1.2xCO2":
+        fmt = "^"
+    elif pair[2].split(",")[2].replace(" ","") == "1.4xCO2":
+        fmt = "<"
+    elif pair[2].split(",")[2].replace(" ","") == "1.6xCO2":
+        fmt = ">"
+    elif pair[2].split(",")[2].replace(" ","") == "2xCO2":
+        fmt = "p"
+    elif pair[2].split(",")[2].replace(" ","") == "2.1xCO2":
+        fmt = "s"
+    elif pair[2].split(",")[2].replace(" ","") == "3xCO2" or pair[2].split(",")[2].replace(" ","") == "3.0xCO2":
+        fmt = "*"
+    elif pair[2].split(",")[2].replace(" ","") == "4xCO2":
+        fmt = "x"
+
+    if pair[2].split(",")[1].replace(" ","") == "Maastrichtian":
+        color = "blue"
+    elif pair[2].split(",")[1].replace(" ","") == "Miocene":
+        color = "green"
+    elif pair[2].split(",")[1].replace(" ","") == "Pliocene":
+        color = "orange"
+    elif pair[2].split(",")[1].replace(" ","") == "Eocene":
+        color = "red"
+    elif pair[2].split(",")[1].replace(" ","") == "PreIndustrial":
+        color = "cyan"
+    elif pair[2].split(",")[1].replace(" ","") == "Oligocene":
+        color = "gray"
+    ax.errorbar(pair[0], pair[1], xerr=pair[3], yerr=pair[4], label=pair[2], fmt=fmt, markersize=8, capsize=5, ecolor="black", color=color)
     
 x = np.linspace(0,5,100)
-ax.plot(x,x, "--", color="gray")
+ax.plot(x,x, "--", color="gray", label = "AA = AAA")
 
 ax.set_xlabel("Arctic amplification")
 ax.set_ylabel("Antarctic amplification")
 ax.set_ylim(0,4)
 ax.set_xlim(0,4)
-
-fig.set_figsize=(16,8)
     
 ax.legend(bbox_to_anchor=(1.0, 1.0), loc="upper left", fontsize=8)
 fig.tight_layout()
